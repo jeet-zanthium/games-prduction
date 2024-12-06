@@ -23,7 +23,7 @@ app.use('/users', usersRouter);
 app.use('/auth', authRouter);
 
 // Health check endpoint
-app.get('/health-check', (req, res) => {
+app.get('/health-check', (_, res) => {
   res.send('Server is running');
 });
 

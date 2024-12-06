@@ -2,7 +2,7 @@ import { Router } from 'express';
 
 const router = Router();
 
-router.get('/', (req, res) => {
+router.get('/', (_, res) => {
   res.send('WebSocket route is active!');
 });
 
@@ -15,7 +15,6 @@ router.post('/broadcast', async (req, res) => {
       .status(400)
       .json({ success: false, message: 'Message is required' });
   }
-  const app = req.app.io;
 
   req.app.get('io').emit('broadcast', { message });
   res.json({ success: true, message: 'Message broadcasted!' });
