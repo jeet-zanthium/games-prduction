@@ -1,0 +1,82 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ActiveStatus {
+  ACTIVE
+  IN_ACTIVE
+
+  @@map("active_statuses")
+}
+
+enum BlockStatus {
+  BLOCKED
+  UN_BLOCKED
+
+  @@map("block_statuses")
+}
+
+enum Role {
+  ADMIN
+  USER
+
+  @@map("roles")
+}
+
+model User {
+  id           Int          @id @default(autoincrement()) @map("id")
+  referralCode String?      @unique @map("referral_code") @db.VarChar(20)
+  name         String       @map("name") @db.VarChar(255)
+  phone        String       @unique @map("phone") @db.VarChar(10)
+  password     String       @map("password") @db.VarChar(255)
+  referredBy   Int?         @map("referred_by")
+  role         Role         @default(USER) @map("role")
+  activatedAt  DateTime?    @map("activated_at")
+  activeStatus ActiveStatus @default(IN_ACTIVE) @map("active_status")
+  blockStatus  BlockStatus  @default(UN_BLOCKED) @map("block_status")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  referrer  User?          @relation(fields: [referredBy], references: [id], name: "referrer")
+  referrals User[]         @relation(name: "referrer")
+  children  UserChildren[] @relation(name: "children")
+  parents   UserChildren[] @relation(name: "parent")
+  wallet    Wallet?
+
+  @@map("users")
+}
+
+model Wallet {
+  id             Int     @id @default(autoincrement()) @map("id")
+  userId         Int     @unique @map("user_id")
+  rechargeWallet Decimal @map("recharge_wallet") @db.Decimal(12, 4)
+  winningWallet  Decimal @map("winning_wallet") @db.Decimal(12, 4)
+  bonusWallet    Decimal @map("bonus_wallet") @db.Decimal(12, 4)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("wallets")
+}
+
+model UserChildren {
+  id      Int @id @default(autoincrement()) @map("id")
+  userId  Int @map("user_id")
+  childId Int @map("child_id")
+  level   Int
+
+  user  User @relation(fields: [userId], references: [id], name: "children")
+  child User @relation(fields: [childId], references: [id], name: "parent")
+
+  @@map("user_children")
+}
